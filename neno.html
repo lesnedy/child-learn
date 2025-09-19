@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>JIFUNZE KUSOMA NA KUHESABU</title>
+<style>
+:root {
+  --primary:#2c3e50; --secondary:#27ae60; --bg:#f4f6f8; --card-bg:#fff; --text:#333;
+}
+body {font-family:"Segoe UI", Roboto, Arial, sans-serif; margin:0; padding:20px; background:var(--bg); color:var(--text);}
+h1{text-align:center; color:var(--primary); margin-bottom:20px;}
+.card{background:var(--card-bg); border-radius:16px; padding:20px; margin:15px auto; max-width:900px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.card h2{color:var(--secondary); margin-top:0;}
+select,input,button{padding:10px 14px; border-radius:10px; border:1px solid #ccc; font-size:1rem;}
+select,input{width:100%; max-width:400px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(60px,1fr)); gap:10px; margin-top:15px;}
+button{padding:14px; border-radius:12px; border:none; background:var(--primary); color:#fff; font-weight:bold; cursor:pointer; transition:0.2s;}
+button:hover{background:var(--secondary);}
+.output{margin-top:15px; font-size:1.2rem; font-weight:bold; color:var(--primary); text-align:center;}
+.input-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:15px;}
+.input-row input{flex:1;}
+</style>
+</head>
+<body>
+
+<h1>🌍 JIFUNZE KUSOMA NA KUHESABU</h1>
+
+<div class="card">
+  <h2>🔊 Select Language & Voice</h2>
+  <select id="langSelect">
+    <option value="sw-KE">Kiswahili</option>
+    <option value="en-US" selected>English</option>
+    <option value="fr-FR">French</option>
+  </select>
+  <select id="voiceSelect" style="margin-top:10px;">
+    <option value="child">Child Voice</option>
+    <option value="mother" selected>Mother Voice</option>
+    <option value="father">Father Voice</option>
+  </select>
+</div>
+
+<div class="card">
+  <h2>🔤 Alphabets (A–Z)</h2>
+  <div id="alphabet" class="grid"></div>
+</div>
+
+<div class="card">
+  <h2>🔢 Numbers (1–10)</h2>
+  <div id="numbers" class="grid"></div>
+  <div class="output" id="numberWord"></div>
+</div>
+
+<div class="card">
+  <h2>⌨️ Type & Speak(Andika na ongea)</h2>
+  <div class="input-row">
+    <input type="text" id="textInput" placeholder="Type a word, number, or sentence..." />
+    <button id="speakBtn">Speak(ongea)</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const synth = window.speechSynthesis;
+  let voices = [];
+  let lang='en-US', voiceType='mother';
+
+  const langSelect = document.getElementById('langSelect');
+  const voiceSelect = document.getElementById('voiceSelect');
+  const alphabetDiv = document.getElementById('alphabet');
+  const numbersDiv = document.getElementById('numbers');
+  const numberWordDiv = document.getElementById('numberWord');
+  const textInput = document.getElementById('textInput');
+  const speakBtn = document.getElementById('speakBtn');
+
+  const numberWords={
+    "en-US":["One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten"],
+    "fr-FR":["Un","Deux","Trois","Quatre","Cinq","Six","Sept","Huit","Neuf","Dix"],
+    "sw-KE":["Moja","Mbili","Tatu","Nne","Tano","Sita","Saba","Nane","Tisa","Kumi"]
+  };
+
+  function loadVoices(){ voices=synth.getVoices()||[]; }
+  loadVoices();
+  if(speechSynthesis.onvoiceschanged!==undefined){ speechSynthesis.onvoiceschanged=loadVoices;}
+
+  function speakText(text){
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+
+    // Select pitch and rate based on voiceType for soft sound
+    switch(voiceType){
+      case 'child':
+        u.pitch=2.0; u.rate=1.1; break;
+      case 'mother':
+        u.pitch=1.4; u.rate=0.9; break;
+      case 'father':
+        u.pitch=0.8; u.rate=1.0; break;
+      default:
+        u.pitch=1; u.rate=1;
+    }
+
+    // Select first available voice matching language
+    let filteredVoices = voices.filter(v=>v.lang.toLowerCase().startsWith(lang.split('-')[0]));
+    if(filteredVoices.length) u.voice=filteredVoices[0];
+
+    u.volume=1;
+    synth.cancel(); synth.speak(u);
+  }
+
+  // Alphabet buttons
+  for(let i=65;i<=90;i++){
+    const letter=String.fromCharCode(i);
+    const btn=document.createElement('button');
+    btn.textContent=letter;
+    btn.addEventListener('click',()=>speakText(letter));
+    alphabetDiv.appendChild(btn);
+  }
+
+  // Number buttons
+  for(let i=1;i<=10;i++){
+    const btn=document.createElement('button');
+    btn.textContent=i;
+    btn.addEventListener('click',()=>{
+      const word=numberWords[lang][i-1]||i.toString();
+      numberWordDiv.textContent=`${i} = ${word}`;
+      speakText(word);
+    });
+    numbersDiv.appendChild(btn);
+  }
+
+  langSelect.addEventListener('change',()=>{ lang=langSelect.value; numberWordDiv.textContent=""; });
+  voiceSelect.addEventListener('change',()=>{ voiceType=voiceSelect.value; });
+  speakBtn.addEventListener('click',()=>{ const txt=textInput.value.trim(); if(txt) speakText(txt); });
+})();
+</script>
+</body>
+</html>
